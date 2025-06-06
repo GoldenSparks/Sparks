@@ -24,116 +24,146 @@ namespace GoldenSparks.Gui.Popups
 {
     public partial class PortTools : Form
     {
-        readonly BackgroundWorker worker;
-        readonly UPnP upnp;
-        int port;
-        
-        public PortTools(int port) {
+        public BackgroundWorker worker;
+        public UPnP upnp;
+        public int port;
+
+        public PortTools(int port)
+        {
             InitializeComponent();
-            worker = new BackgroundWorker { WorkerSupportsCancellation = true };
+            worker = new BackgroundWorker 
+            {
+                WorkerSupportsCancellation = true 
+            };
             worker.DoWork += AsyncWorker_DoWork;
             worker.RunWorkerCompleted += AsyncWorker_OnCompleted;
-            
+
             this.port = port;
-            btnForward.Text = "Forward " + port;
-            
-            upnp = new UPnP();
-            upnp.Log = LogUPnP;
+            BtnForward.Text = "Forward " + port;
+
+            upnp = new UPnP
+            {
+                Log = LogUPnP
+            };
         }
-        
-        void PortTools_Load(object sender, EventArgs e) {
+
+        public void PortTools_Load(object sender, EventArgs e)
+        {
             GuiUtils.SetIcon(this);
         }
 
-        void PortChecker_FormClosing(object sender, FormClosingEventArgs e) {
+        public void PortChecker_FormClosing(object sender, FormClosingEventArgs e)
+        {
             worker.CancelAsync();
         }
 
-        void linkManually_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+        public void linkManually_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
             GuiUtils.OpenBrowser("https://www.canyouseeme.org/");
         }
 
-        void linkHelpForward_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+        public void linkHelpForward_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
             GuiUtils.OpenBrowser("https://portforward.com");
         }
-        
-        void btnForward_Click(object sender, EventArgs e) {
+
+        public void btnForward_Click(object sender, EventArgs e)
+        {
             StartForwardOrDelete(true);
         }
 
-        void btnDelete_Click(object sender, EventArgs e) {
+        public void btnDelete_Click(object sender, EventArgs e)
+        {
             StartForwardOrDelete(false);
         }
-        
-        
-        void StartForwardOrDelete(bool forwardingMode) {
+
+
+        public void StartForwardOrDelete(bool forwardingMode)
+        {
             SetUPnPEnabled(false);
-            txtLogs.Text = "";
+            TxtLogs.Text = "";
             MakeLogsVisible();
             worker.RunWorkerAsync(forwardingMode);
         }
-        
-        void MakeLogsVisible() {
-            if (gbLogs.Visible) return;
+
+        public void MakeLogsVisible()
+        {
+            if (GbLogs.Visible) return;
             // https://stackoverflow.com/questions/5962595/how-do-you-resize-a-form-to-fit-its-content-automatically
-            this.AutoSize  = true;
-            gbLogs.Visible = true;
-        }
-        
-        void SetUPnPEnabled(bool enabled) {
-            btnDelete.Enabled  = enabled;
-            btnForward.Enabled = enabled;
+            this.AutoSize = true;
+            GbLogs.Visible = true;
         }
 
-        
-        void AsyncWorker_DoWork(object sender, DoWorkEventArgs e) {
+        public void SetUPnPEnabled(bool enabled)
+        {
+            BtnDelete.Enabled = enabled;
+            BtnForward.Enabled = enabled;
+        }
+
+
+        public void AsyncWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
             bool forwarding = (bool)e.Argument;
-            
-            try {
-                if (!upnp.Discover()) {
+
+            try
+            {
+                if (!upnp.Discover())
+                {
                     e.Result = 0;
-                } else if (forwarding) {
+                }
+                else if (forwarding)
+                {
                     upnp.ForwardPort(port, UPnP.TCP_PROTOCOL, Server.SoftwareName + "Server");
                     e.Result = 1;
-                } else {
+                }
+                else
+                {
                     upnp.DeleteForwardingRule(port, UPnP.TCP_PROTOCOL);
                     e.Result = 3;
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Logger.LogError("Unexpected UPnP error", ex);
                 e.Result = 2;
             }
         }
 
-        void AsyncWorker_OnCompleted(object sender, RunWorkerCompletedEventArgs e) {
+        public void AsyncWorker_OnCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
             if (e.Cancelled) return;
             SetUPnPEnabled(true);
 
             int result = (int)e.Result;
-            switch (result) {
+            switch (result)
+            {
                 case 0:
-                    lblResult.Text = "Error contacting router.";
-                    lblResult.ForeColor = Color.Red;
+                    LblResult.Text = "Error contacting router.";
+                    LblResult.ForeColor = Color.Red;
                     return;
                 case 1:
-                    lblResult.Text = "Port forwarded automatically using UPnP";
-                    lblResult.ForeColor = Color.Green;
+                    LblResult.Text = "Port forwarded automatically using UPnP";
+                    LblResult.ForeColor = Color.Green;
                     return;
                 case 2:
-                    lblResult.Text = "Unexpected error, see Error Logs";
-                    lblResult.ForeColor = Color.Red;
+                    LblResult.Text = "Unexpected error, see Error Logs";
+                    LblResult.ForeColor = Color.Red;
                     return;
                 case 3:
-                    lblResult.Text = "Deleted port forward rule";
-                    lblResult.ForeColor = Color.Green;
+                    LblResult.Text = "Deleted port forward rule";
+                    LblResult.ForeColor = Color.Green;
                     return;
             }
         }
-        
-        void LogUPnP(string message) {
-            RunOnUI_Async(() => txtLogs.AppendText(message + "\r\n"));
+
+        public void LogUPnP(string message)
+        {
+            RunOnUI_Async(() => TxtLogs.AppendText(message + "\r\n"));
         }
-        
-        void RunOnUI_Async(UIAction act) { BeginInvoke(act); }
+
+        public void RunOnUI_Async(UIAction act) 
+        { 
+            BeginInvoke(act); 
+        }
     }
 }

@@ -1,207 +1,212 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
-        
-    Dual-licensed under the Educational Community License, Version 2.0 and
-    the GNU General Public License, Version 3 (the "Licenses"); you may
-    not use this file except in compliance with the Licenses. You may
-    obtain a copy of the Licenses at
-    
-    https://opensource.org/license/ecl-2-0/
-    https://www.gnu.org/licenses/gpl-3.0.html
-    
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the Licenses are distributed on an "AS IS"
-    BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
-    or implied. See the Licenses for the specific language governing
-    permissions and limitations under the Licenses.
- */
+   Copyright 2015-2024 MCGalaxy
+
+   Dual-licensed under the Educational Community License, Version 2.0 and
+   the GNU General Public License, Version 3 (the "Licenses"); you may
+   not use this file except in compliance with the Licenses. You may
+   obtain a copy of the Licenses at
+
+   https://opensource.org/license/ecl-2-0/
+   https://www.gnu.org/licenses/gpl-3.0.html
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the Licenses are distributed on an "AS IS"
+   BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+   or implied. See the Licenses for the specific language governing
+   permissions and limitations under the Licenses.
+*/
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GoldenSparks.Blocks;
-using BlockID = System.UInt16;
-using BlockRaw = System.Byte;
-
-namespace GoldenSparks.Gui {
-    public partial class PropertyWindow : Form {
-        BlockID curBlock;
-        List<BlockID> blockIDMap;
-        ItemPermsHelper blockItems = new ItemPermsHelper();
-        
+namespace GoldenSparks.Gui
+{
+    public partial class PropertyWindow : Form
+    {
+        public ushort CurBlock;
+        public List<ushort> BlockIDMap;
+        public ItemPermsHelper BlockItems = new ItemPermsHelper();
         // need to keep a list of changed block perms, because we don't want
         // to modify the server's live permissions if user clicks 'discard'
-        BlockPerms blockPermsOrig, blockPermsCopy;
-        List<BlockPerms> blockPermsChanged = new List<BlockPerms>();
-        BlockProps[] blockPropsChanged = new BlockProps[Block.Props.Length];
-        
-        void LoadBlocks() {
-            blk_list.Items.Clear();
-            blockPermsChanged.Clear();
-            blockIDMap = new List<BlockID>();
-            
-            for (int b = 0; b < blockPropsChanged.Length; b++) 
+        public BlockPerms BlockPermsOrig, BlockPermsCopy;
+        public List<BlockPerms> BlockPermsChanged = new List<BlockPerms>();
+        public BlockProps[] BlockPropsChanged = new BlockProps[Block.Props.Length];
+        public void LoadBlocks()
+        {
+            Blk_list.Items.Clear();
+            BlockPermsChanged.Clear();
+            BlockIDMap = new List<ushort>();
+            for (int b = 0; b < BlockPropsChanged.Length; b++)
             {
-                blockPropsChanged[b] = Block.Props[b];
-                blockPropsChanged[b].ChangedScope = 0;
-                
-                BlockID block = (BlockID)b;
+                BlockPropsChanged[b] = Block.Props[b];
+                BlockPropsChanged[b].ChangedScope = 0;
+                ushort block = (ushort)b;
                 if (!Block.ExistsGlobal(block)) continue;
-                
                 string name = Block.GetName(Player.Sparks, block);
-                blk_list.Items.Add(name);
-                blockIDMap.Add(block);
+                Blk_list.Items.Add(name);
+                BlockIDMap.Add(block);
             }
-            
-            blockItems.GetCurPerms = BlockGetOrAddPermsChanged;
-            if (blk_list.SelectedIndex == -1) {
-                blk_list.SelectedIndex = 0;
+            BlockItems.GetCurPerms = BlockGetOrAddPermsChanged;
+            if (Blk_list.SelectedIndex == -1)
+            {
+                Blk_list.SelectedIndex = 0;
             }
         }
-
-        void SaveBlocks() {
-            if (blockPermsChanged.Count > 0)
-                SaveBlockPermissions();            
+        public void SaveBlocks()
+        {
+            if (BlockPermsChanged.Count > 0)
+            {
+                SaveBlockPermissions();
+            }
             if (AnyBlockPropsChanged())
+            {
                 SaveBlockProps();
-            
+            }
             LoadBlocks();
         }
-        
-        void SaveBlockPermissions() {
-            foreach (BlockPerms changed in blockPermsChanged) 
+        public void SaveBlockPermissions()
+        {
+            foreach (BlockPerms changed in BlockPermsChanged)
             {
                 BlockPerms orig = BlockPerms.Find(changed.ID);
                 changed.CopyPermissionsTo(orig);
             }
-            
             BlockPerms.Save();
             BlockPerms.ApplyChanges();
             BlockPerms.ResendAllBlockPermissions();
         }
-        
-        bool AnyBlockPropsChanged() {
-            for (int b = 0; b < blockPropsChanged.Length; b++) 
+        public bool AnyBlockPropsChanged()
+        {
+            for (int b = 0; b < BlockPropsChanged.Length; b++)
             {
-                if (blockPropsChanged[b].ChangedScope != 0) return true;
+                if (BlockPropsChanged[b].ChangedScope != 0)
+                {
+                    return true;
+                }
             }
             return false;
         }
-        
-        void SaveBlockProps() {
-            for (int b = 0; b < blockPropsChanged.Length; b++) 
+        public void SaveBlockProps()
+        {
+            for (int b = 0; b < BlockPropsChanged.Length; b++)
             {
-                if (blockPropsChanged[b].ChangedScope == 0) continue;
-                Block.Props[b] = blockPropsChanged[b];
+                if (BlockPropsChanged[b].ChangedScope == 0) continue;
+                Block.Props[b] = BlockPropsChanged[b];
             }
-            
-            BlockProps.Save("default", Block.Props, 1); 
+            BlockProps.Save("default", Block.Props, 1);
             Block.SetBlocks();
         }
-        
-        
-        void blk_list_SelectedIndexChanged(object sender, EventArgs e) {
-            curBlock = blockIDMap[blk_list.SelectedIndex];
-            blockPermsOrig = BlockPerms.Find(curBlock);
-            blockPermsCopy = blockPermsChanged.Find(p => p.ID == curBlock);
+        public void Blk_list_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            CurBlock = BlockIDMap[Blk_list.SelectedIndex];
+            BlockPermsOrig = BlockPerms.Find(CurBlock);
+            BlockPermsCopy = BlockPermsChanged.Find(p => p.ID == CurBlock);
             BlockInitSpecificArrays();
-            blockItems.SupressEvents = true;
-            
-            BlockProps props = blockPropsChanged[curBlock];
-            blk_cbMsgBlock.Checked = props.IsMessageBlock;
-            blk_cbPortal.Checked = props.IsPortal;
-            blk_cbDeath.Checked = props.KillerBlock;
-            blk_txtDeath.Text = props.DeathMessage;
-            blk_txtDeath.Enabled = blk_cbDeath.Checked;
-            
-            blk_cbDoor.Checked = props.IsDoor;
-            blk_cbTdoor.Checked = props.IsTDoor;
-            blk_cbRails.Checked = props.IsRails;
-            blk_cbLava.Checked = props.LavaKills;
-            blk_cbWater.Checked = props.WaterKills;
-            
-            BlockPerms perms = blockPermsCopy != null ? blockPermsCopy : blockPermsOrig;
-            blockItems.Update(perms);
+            BlockItems.SupressEvents = true;
+            BlockProps props = BlockPropsChanged[CurBlock];
+            Blk_cbMsgBlock.Checked = props.IsMessageBlock;
+            Blk_cbPortal.Checked = props.IsPortal;
+            Blk_cbDeath.Checked = props.KillerBlock;
+            Blk_txtDeath.Text = props.DeathMessage;
+            Blk_txtDeath.Enabled = Blk_cbDeath.Checked;
+            Blk_cbDoor.Checked = props.IsDoor;
+            Blk_cbTdoor.Checked = props.IsTDoor;
+            Blk_cbRails.Checked = props.IsRails;
+            Blk_cbLava.Checked = props.LavaKills;
+            Blk_cbWater.Checked = props.WaterKills;
+            BlockPerms perms = BlockPermsCopy ?? BlockPermsOrig;
+            BlockItems.Update(perms);
         }
-        
-        void BlockInitSpecificArrays() {
-            if (blockItems.MinBox != null) return;
-            blockItems.MinBox = blk_cmbMin;
-            blockItems.AllowBoxes = new ComboBox[] { blk_cmbAlw1, blk_cmbAlw2, blk_cmbAlw3 };
-            blockItems.DisallowBoxes = new ComboBox[] { blk_cmbDis1, blk_cmbDis2, blk_cmbDis3 };
-            blockItems.FillInitial();
+        public void BlockInitSpecificArrays()
+        {
+            if (BlockItems.MinBox != null)
+            {
+                return;
+            }
+            BlockItems.MinBox = Blk_cmbMin;
+            BlockItems.AllowBoxes = new ComboBox[] 
+            { 
+                Blk_cmbAlw1, Blk_cmbAlw2, Blk_cmbAlw3 
+            };
+            BlockItems.DisallowBoxes = new ComboBox[] 
+            { 
+                Blk_cmbDis1, Blk_cmbDis2, Blk_cmbDis3 
+            };
+            BlockItems.FillInitial();
         }
-        
-        ItemPerms BlockGetOrAddPermsChanged() {
-            if (blockPermsCopy != null) return blockPermsCopy;
-            blockPermsCopy = blockPermsOrig.Copy();
-            blockPermsChanged.Add(blockPermsCopy);
-            return blockPermsCopy;
+        public ItemPerms BlockGetOrAddPermsChanged()
+        {
+            if (BlockPermsCopy != null)
+            {
+                return BlockPermsCopy;
+            }
+            BlockPermsCopy = BlockPermsOrig.Copy();
+            BlockPermsChanged.Add(BlockPermsCopy);
+            return BlockPermsCopy;
         }
-        
-        
-        void blk_cmbMin_SelectedIndexChanged(object sender, EventArgs e) {
-            blockItems.OnMinRankChanged((ComboBox)sender);
+        public void Blk_cmbMin_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BlockItems.OnMinRankChanged((ComboBox)sender);
         }
-        
-        void blk_cmbSpecific_SelectedIndexChanged(object sender, EventArgs e) {
-            blockItems.OnSpecificChanged((ComboBox)sender);
+        public void Blk_cmbSpecific_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BlockItems.OnSpecificChanged((ComboBox)sender);
         }
-
-        void blk_btnHelp_Click(object sender, EventArgs e) {
-            GetHelp(blk_list.SelectedItem.ToString());
+        public void Blk_btnHelp_Click(object sender, EventArgs e)
+        {
+            GetHelp(Blk_list.SelectedItem.ToString());
         }
-        
-        
-        void blk_cbMsgBlock_CheckedChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].IsMessageBlock = blk_cbMsgBlock.Checked;
+        public void Blk_cbMsgBlock_CheckedChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].IsMessageBlock = Blk_cbMsgBlock.Checked;
             MarkBlockPropsChanged();
         }
-        
-        void blk_cbPortal_CheckedChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].IsPortal = blk_cbPortal.Checked;
+        public void Blk_cbPortal_CheckedChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].IsPortal = Blk_cbPortal.Checked;
             MarkBlockPropsChanged();
         }
-        
-        void blk_cbDeath_CheckedChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].KillerBlock = blk_cbDeath.Checked;
-            blk_txtDeath.Enabled = blk_cbDeath.Checked;
+        public void Blk_cbDeath_CheckedChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].KillerBlock = Blk_cbDeath.Checked;
+            Blk_txtDeath.Enabled = Blk_cbDeath.Checked;
             MarkBlockPropsChanged();
         }
-        
-        void blk_txtDeath_TextChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].DeathMessage = blk_txtDeath.Text;
+        public void Blk_txtDeath_TextChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].DeathMessage = Blk_txtDeath.Text;
             MarkBlockPropsChanged();
         }
-        
-        void blk_cbDoor_CheckedChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].IsDoor = blk_cbDoor.Checked;
+        public void Blk_cbDoor_CheckedChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].IsDoor = Blk_cbDoor.Checked;
             MarkBlockPropsChanged();
         }
-        
-        void blk_cbTdoor_CheckedChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].IsTDoor = blk_cbTdoor.Checked;
+        public void Blk_cbTdoor_CheckedChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].IsTDoor = Blk_cbTdoor.Checked;
             MarkBlockPropsChanged();
         }
-        
-        void blk_cbRails_CheckedChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].IsRails = blk_cbRails.Checked;
+        public void Blk_cbRails_CheckedChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].IsRails = Blk_cbRails.Checked;
             MarkBlockPropsChanged();
         }
-        
-        void blk_cbLava_CheckedChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].LavaKills = blk_cbLava.Checked;
+        public void Blk_cbLava_CheckedChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].LavaKills = Blk_cbLava.Checked;
             MarkBlockPropsChanged();
         }
-        
-        void blk_cbWater_CheckedChanged(object sender, EventArgs e) {
-            blockPropsChanged[curBlock].WaterKills = blk_cbWater.Checked;
+        public void Blk_cbWater_CheckedChanged(object sender, EventArgs e)
+        {
+            BlockPropsChanged[CurBlock].WaterKills = Blk_cbWater.Checked;
             MarkBlockPropsChanged();
         }
-        
-        void MarkBlockPropsChanged() {
+        public void MarkBlockPropsChanged()
+        {
             // don't mark props as changed when supressing events
-            int changed = blockItems.SupressEvents ? 0 : BlockProps.SCOPE_GLOBAL;
-            blockPropsChanged[curBlock].ChangedScope = (byte)changed;
+            int changed = BlockItems.SupressEvents ? 0 : BlockProps.SCOPE_GLOBAL;
+            BlockPropsChanged[CurBlock].ChangedScope = (byte)changed;
         }
     }
 }

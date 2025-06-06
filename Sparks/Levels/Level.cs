@@ -31,7 +31,7 @@ using BlockRaw = System.Byte;
 
 namespace GoldenSparks 
 {
-    public enum LevelPermission
+    public enum LevelPermission : int
     {
         Banned  = -20, Guest =   0, Builder = 30, AdvBuilder =  50, 
         Operator = 80, Admin = 100, Owner  = 120, Sparkie    = 127,

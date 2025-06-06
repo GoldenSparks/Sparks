@@ -69,7 +69,7 @@ namespace GoldenSparks.Config {
         
         public override string Serialise(object value) {
             LevelPermission perm = (LevelPermission)value;
-            return ((sbyte)perm).ToString();
+            return ((int)perm).ToString();
         }
     }
     

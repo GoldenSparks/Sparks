@@ -32,7 +32,7 @@ namespace GoldenSparks
         public static Group GuestRank  { get { return Find(LevelPermission.Guest); } }
         public static Group DefaultRank;
         public static Group NobodyRank { get { return Find(LevelPermission.Nobody); } }
-        public static Group GoldenRank { get { return Find(LevelPermission.Sparkie); } }
+        public static Group GoldenRank = new Group(LevelPermission.Sparkie, int.MaxValue, 21024000, "&6S&ep&6a&er&6k&ei&6e", "&6", int.MaxValue, int.MaxValue);
 
 
         public static List<Group> GroupList = new List<Group>();
@@ -42,8 +42,8 @@ namespace GoldenSparks
         const int GEN_LIMIT = 30  * 1000 * 1000;
 
         public string Name;
-        [ConfigPerm("Permission", null, LevelPermission.Owner)]
-        public LevelPermission Permission = LevelPermission.Owner;
+        [ConfigPerm("Permission", null, LevelPermission.Null)]
+        public LevelPermission Permission = LevelPermission.Null;
 
         [ConfigColor("Color", null, "&f")]
         public string Color;
@@ -147,9 +147,9 @@ namespace GoldenSparks
         
         public static LevelPermission ParsePermOrName(string value, LevelPermission defPerm) {
             if (value == null) return defPerm;
-            
-            sbyte perm;
-            if (sbyte.TryParse(value, out perm))
+
+            int perm;
+            if (int.TryParse(value, out perm))
                 return (LevelPermission)perm;
             
             Group grp = Find(value);
@@ -193,7 +193,6 @@ namespace GoldenSparks
                 Add(LevelPermission.Operator,  2097152,       90, "Operator",   "&c", GEN_LIMIT,   8); // 128^3
                 Add(LevelPermission.Admin,    16777216, 21024000, "Admin",      "&e", GEN_ADMIN,  32); // 256^3
                 Add(LevelPermission.Owner,   134217728, 21024000, "Owner",      "&4", GEN_ADMIN, 256); // 512^3
-                Add(LevelPermission.Sparkie, int.MaxValue, int.MaxValue, "&6S&ep&6a&er&6k&ei&6e", "&6", int.MaxValue, int.MaxValue); // 512^3
 
             }
 

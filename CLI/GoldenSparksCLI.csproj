@@ -53,6 +53,12 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>GoldenSparks.Cli.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>GSC.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Sparks\properties\AssemblyInfo.cs">
       <Link>AssemblyInfo.cs</Link>
@@ -66,7 +72,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <Content Include="GSC.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

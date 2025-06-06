@@ -16,10 +16,8 @@
     permissions and limitations under the Licenses.
  */
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Reflection;
 using GoldenSparks.Network;
 using GoldenSparks.Tasks;
 
@@ -35,9 +33,10 @@ namespace GoldenSparks
         public const string UpdatesURL = "https://github.com/GoldenSparks/Sparks/raw/Sparkie/Uploads/";
         public const string SQLiteURL = "https://github.com/GoldenSparks/Sparks/raw/Sparkie/Uploads/sqlite3.dll";
         public static string WikiURL = "https://github.com/ClassiCube/MCGalaxy/wiki/";
+        public static string FlamesURL = "https://github.com/RandomStrangers/Fire/";
 
 
-        const string CurrentVersionURL = BaseURL + "Uploads/current_version.txt";
+        const string CurrentVersionURL = UpdatesURL + "current_version.txt";
 
         const string dllURL = UpdatesURL + "GoldenSparks_.dll";
         const string guiURL = UpdatesURL + "GoldenSparks.exe";
